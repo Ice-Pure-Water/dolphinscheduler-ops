@@ -1,0 +1,4 @@
+interface:
+  display_name: "DolphinScheduler 运维操作"
+  short_description: "通过 DolphinScheduler REST API 管理资源、工作流和实例"
+  default_prompt: "使用 DolphinScheduler REST API 安全查询或操作资源、工作流、工作流实例和任务实例。"
