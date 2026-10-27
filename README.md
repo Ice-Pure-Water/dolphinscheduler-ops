@@ -19,6 +19,12 @@ cp -R ~/Downloads/projects/dolphinscheduler-ops ~/.codex/skills/dolphinscheduler
 使用 $dolphinscheduler-ops 检查目标工作流的定义、子流程引用和调度状态。先核对服务端版本和只读接口。
 ```
 
+## 反馈与贡献
+
+在其他环境使用时发现问题，可直接[提交 Issue](https://github.com/Ice-Pure-Water/dolphinscheduler-ops/issues/new)；修复文档或脚本可从 GitHub 网页创建分支并提交 [Pull Request](https://github.com/Ice-Pure-Water/dolphinscheduler-ops/pulls)，不需要本机项目副本。合入 `main` 后，再从仓库更新 skill 安装副本。
+
+提交时请提供 skill 提交版本、DolphinScheduler 版本、复现步骤和脱敏证据。不要附带密码、令牌、Webhook、内网地址、未脱敏 SQL 参数或原始日志。
+
 ## 文件导航
 
 - [`SKILL.md`](SKILL.md)：适用范围、运维流程和安全边界。
@@ -30,4 +36,4 @@ cp -R ~/Downloads/projects/dolphinscheduler-ops ~/.codex/skills/dolphinscheduler
 - [`docs/usage.md`](docs/usage.md)：安装、调用和脚本使用细节。
 - [`docs/maintenance.md`](docs/maintenance.md)：校验、主题分支和 PR 发布流程。
 
-部分参考记录来自私有部署环境。本仓库保持私有；对外公开前应先移除内网地址、实例标识和环境专属运行证据。
+本仓库当前公开。部分参考内容源于私有部署环境；提交公开反馈或修复前，请去除凭据、Webhook、内网地址、实例标识和未脱敏运行证据。

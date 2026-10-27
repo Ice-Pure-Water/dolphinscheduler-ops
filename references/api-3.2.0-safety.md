@@ -1,6 +1,6 @@
 # 当前部署 DS 3.2.0 接口安全速查
 
-2026-09-27 只读核对 `http://172.16.1.35:12345/dolphinscheduler/v3/api-docs` 的 `info.version=3.2.0` 与以下 `operationId`。**使用前重新检查目标部署的 OpenAPI；下面的写接口仅描述语义，不构成执行授权。** 所有路径均相对于 `/dolphinscheduler`，登录会话及敏感参数不在此保存。
+2026-09-27 只读核对某部署 `/v3/api-docs` 的 `info.version=3.2.0` 与以下 `operationId`。**使用前重新检查目标部署的 OpenAPI；下面的写接口仅描述语义，不构成执行授权。** 所有路径均相对于 `/dolphinscheduler`，登录会话及敏感参数不在此保存。
 
 | 路径和方法 | `operationId` | 作用与限制 |
 |---|---|---|

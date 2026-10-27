@@ -6,7 +6,7 @@
 
 ```text
 DS 服务端：2.0.5
-API 根地址：http://172.16.1.35:12345/dolphinscheduler
+API 根地址：由目标环境的 DS_URL 提供
 认证：POST /login，通常返回 session cookie；不要假设 3.x token 认证可用
 ```
 
