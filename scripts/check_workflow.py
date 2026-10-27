@@ -67,7 +67,12 @@ class ReadOnlyClient:
             raise ValueError("只能通过已核验的只读接口调用 GET")
         if method == "POST" and path != "/login":
             raise ValueError("只允许 POST /login")
-        body = urllib.parse.urlencode(form).encode() if form is not None else None
+        if method == "POST" and path == "/login" and form is not None:
+            # DS 3.2.0 OpenAPI declares these as required query parameters.
+            path = path + "?" + urllib.parse.urlencode(form)
+            body = None
+        else:
+            body = urllib.parse.urlencode(form).encode() if form is not None else None
         request = urllib.request.Request(
             self.base + path,
             data=body,
