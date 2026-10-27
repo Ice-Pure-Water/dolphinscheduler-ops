@@ -2,12 +2,12 @@
 
 ## 适用版本与证据
 
-2026-09-13 对 `http://172.16.1.35:12345/dolphinscheduler` 的实测：
+2026-09-13 对某 DolphinScheduler 部署的实测：
 
 - `/v3/api-docs` → `info.version=3.2.0`。此前 skill 记录的 2.0.5 不能作为当前版本结论。
 - 此部署仍使用 `/projects/{projectCode}/process-definition`、`process-instances` API。不要仅按大版本猜测路径。
 - 当前 SQL Task 行为与 Apache DolphinScheduler 3.2.0 `SqlTask.split` 源码一致；未核对部署 JAR 校验和，不宣称所有节点二进制完全一致。
-- 实测 Worker：`172.16.1.100:1234`；数据源 `34`，`STARROCKS`，MySQL JDBC 协议。
+- 实测使用 `STARROCKS` 数据源和 MySQL JDBC 协议；Worker 地址与数据源 ID 不在公开文档中记录。
 
 ## 已确认根因：前置行注释令整段 SQL 被跳过
 

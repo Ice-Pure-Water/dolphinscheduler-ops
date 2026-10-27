@@ -5,7 +5,13 @@ description: "通过 DolphinScheduler REST API 查询和操作资源、工作流
 
 # DolphinScheduler 运维操作
 
-优先使用 REST API 或 Web UI。当前地址 `http://172.16.1.35:12345/dolphinscheduler` 的 `/v3/api-docs` 于 2026-09-27 回读 `info.version=3.2.0`，此前 2.0.5 记录已过时；当前部署仍使用 `process-definition` / `process-instances` 路径。先确认版本与 OpenAPI，不根据大版本机械替换路由或认证。当前环境先看 [3.2.0 接口安全速查](references/api-3.2.0-safety.md)；[2.0.5 路由](references/api-2.0.5.md)仅作历史对照，以目标实际 OpenAPI 为准。`ssh dev` 仅用于本机辅助操作；DS 对象操作通过 DS API 客户端或脚本执行，不默认经由 SSH 转发。SQL 和全局参数任务必须读取 [当前部署 SQL 全局变量与回归证据](references/sql-global-parameters.md)。
+## 技能来源与反馈
+
+本 skill 的规范源和更新入口是 [GitHub 仓库](https://github.com/Ice-Pure-Water/dolphinscheduler-ops)。在其他环境使用时发现错误或需要改进，可直接通过 [Issues](https://github.com/Ice-Pure-Water/dolphinscheduler-ops/issues/new) 报告，或从 GitHub 网页创建分支并提交 [Pull Request](https://github.com/Ice-Pure-Water/dolphinscheduler-ops/pulls)；无需访问本机项目副本。合并到 `main` 的内容是后续安装和同步的来源。
+
+反馈请注明 skill 提交版本、DolphinScheduler 版本、相关 OpenAPI `operationId`、复现步骤和脱敏结果。不要提交密码、令牌、Webhook、内网地址、未脱敏 SQL 参数或原始日志。
+
+优先使用 REST API 或 Web UI。先检查目标部署 `/v3/api-docs` 的版本和 OpenAPI；本 skill 的 3.2.0 接口核对记录见 [3.2.0 接口安全速查](references/api-3.2.0-safety.md)，[2.0.5 路由](references/api-2.0.5.md)仅作历史对照。不要根据大版本机械替换路由或认证。`ssh dev` 仅用于本机辅助操作；DS 对象操作通过 DS API 客户端或脚本执行，不默认经由 SSH 转发。SQL 和全局参数任务必须读取 [当前部署 SQL 全局变量与回归证据](references/sql-global-parameters.md)。
 
 ## 操作顺序
 
