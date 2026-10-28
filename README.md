@@ -31,7 +31,7 @@ cp -R ~/Downloads/projects/dolphinscheduler-ops ~/.codex/skills/dolphinscheduler
 - [`references/api-3.2.0-safety.md`](references/api-3.2.0-safety.md)：当前部署接口语义和副作用门禁；执行前仍需核验目标 OpenAPI。
 - [`references/api-2.0.5.md`](references/api-2.0.5.md)：旧版路由参考，不代表当前部署。
 - [`references/sql-global-parameters.md`](references/sql-global-parameters.md)：SQL Task 参数、日期、假成功排障及环境回归证据。
-- [`scripts/check_workflow.py`](scripts/check_workflow.py)：受限接口白名单的只读结构预检。
+- [`scripts/check_workflow.py`](scripts/check_workflow.py)：受限接口白名单的只读结构预检，包含 Task 清单一致性和 DAG 坐标/依赖检查。
 - [`agents/openai.yaml`](agents/openai.yaml)：助手界面元数据。
 - [`docs/usage.md`](docs/usage.md)：安装、调用和脚本使用细节。
 - [`docs/maintenance.md`](docs/maintenance.md)：校验、主题分支和 PR 发布流程。

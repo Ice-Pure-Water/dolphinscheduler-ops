@@ -17,6 +17,7 @@ from typing import Any
 SAFE_GET = {
     "/v3/api-docs": None,
     "/projects/{projectCode}/process-definition/{code}": "queryProcessDefinitionByCode",
+    "/projects/{projectCode}/process-definition/{code}/tasks": "getNodeListByDefinitionCode",
     "/projects/{projectCode}/task-definition/{code}": "queryTaskDefinitionDetail",
     "/projects/{projectCode}/schedules": "queryScheduleListPaging",
 }
@@ -105,6 +106,13 @@ class ReadOnlyClient:
         result = self._request_allowlisted(path)
         return self._check(result, template)
 
+    def tasks_by_definition(self, project: int, code: int) -> list[dict]:
+        template = "/projects/{projectCode}/process-definition/{code}/tasks"
+        tasks = self.get(template, project=project, code=code)
+        if not isinstance(tasks, list):
+            raise RuntimeError("工作流 Task 列表接口未返回列表")
+        return tasks
+
     def schedules(self, project: int, code: int, definition_id: int) -> list[dict]:
         template = "/projects/{projectCode}/schedules"
         query = urllib.parse.urlencode(
@@ -131,6 +139,7 @@ class ReadOnlyClient:
         detail = re.fullmatch(
             r"/projects/\d+/(?:process-definition|task-definition)/\d+", parsed.path
         )
+        task_list = re.fullmatch(r"/projects/\d+/process-definition/\d+/tasks", parsed.path)
         schedule = re.fullmatch(r"/projects/\d+/schedules", parsed.path)
         if detail and parsed.query:
             raise ValueError("详情接口不接受额外查询参数")
@@ -146,7 +155,9 @@ class ReadOnlyClient:
                 len(value) != 1 or not value[0].isdigit() for value in query.values()
             ):
                 raise ValueError("调度查询参数不符合只读白名单")
-        if not detail and not schedule:
+        if task_list and parsed.query:
+            raise ValueError("工作流 Task 列表接口不接受额外查询参数")
+        if not detail and not task_list and not schedule:
             raise ValueError("接口不在只读白名单")
         request = urllib.request.Request(self.base + path, method="GET")
         try:
@@ -198,6 +209,36 @@ def validate_definition(data: dict[str, Any]) -> list[str]:
     return sorted(set(problems))
 
 
+def validate_task_list(embedded: list[dict], listed: list[dict]) -> list[str]:
+    """Cross-check the workflow's embedded Task definitions against its Task-list API."""
+    problems: list[str] = []
+    embedded_by_code = {task["code"]: task for task in embedded}
+    listed_by_code = {task["code"]: task for task in listed}
+    if len(embedded_by_code) != len(embedded) or len(listed_by_code) != len(listed):
+        return ["工作流 Task 列表中存在重复 Task Code"]
+    if set(embedded_by_code) != set(listed_by_code):
+        return ["工作流详情与 Task 列表接口的 Task Code 集合不一致"]
+    compared_fields = (
+        "name",
+        "version",
+        "description",
+        "taskType",
+        "taskParams",
+        "flag",
+        "taskPriority",
+        "workerGroup",
+        "environmentCode",
+        "resourceIds",
+        "taskExecuteType",
+        "dependence",
+    )
+    for code, task in embedded_by_code.items():
+        listed_task = listed_by_code[code]
+        if any(task.get(key) != listed_task.get(key) for key in compared_fields):
+            problems.append(f"Task Code {code} 的工作流详情与 Task 列表定义不一致")
+    return problems
+
+
 def run(client: ReadOnlyClient, project: int, code: int) -> list[str]:
     template = "/projects/{projectCode}/process-definition/{code}"
     data = client.get(template, project=project, code=code)
@@ -205,21 +246,14 @@ def run(client: ReadOnlyClient, project: int, code: int) -> list[str]:
     if process["projectCode"] != project or process["code"] != code:
         raise RuntimeError("DS 返回的项目或工作流 Code 不匹配")
     problems = validate_definition(data)
+    try:
+        listed_tasks = client.tasks_by_definition(project, code)
+        if any(task.get("projectCode") != project for task in listed_tasks):
+            problems.append("工作流 Task 列表接口返回了其他项目的任务")
+        problems.extend(validate_task_list(data["taskDefinitionList"], listed_tasks))
+    except RuntimeError as exc:
+        problems.append(f"工作流 Task 列表不可读：{exc}")
     for task in data["taskDefinitionList"]:
-        try:
-            task_detail = client.get(
-                "/projects/{projectCode}/task-definition/{code}",
-                project=project,
-                code=task["code"],
-            )
-            if (
-                not isinstance(task_detail, dict)
-                or task_detail.get("code") != task["code"]
-                or task_detail.get("projectCode") != project
-            ):
-                problems.append(f"Task Code {task['code']} 详情身份不匹配")
-        except RuntimeError as exc:
-            problems.append(f"Task Code {task['code']} 详情不可读：{exc}")
         if task["taskType"] != "SUB_PROCESS":
             continue
         params = task.get("taskParams") or {}

@@ -5,10 +5,11 @@
 | 路径和方法 | `operationId` | 作用与限制 |
 |---|---|---|
 | `GET /projects/{projectCode}/process-definition/{code}` | `queryProcessDefinitionByCode` | 查询**当前**定义、Task、relation 和 `locations`；不会获取任意历史版本。 |
+| `GET /projects/{projectCode}/process-definition/{code}/tasks` | `getNodeListByDefinitionCode` | 查询当前定义下的完整 Task 列表；与工作流详情内嵌的 Task 列表交叉核对。 |
 | `GET /projects/{projectCode}/process-definition/{code}/versions?pageNo=1&pageSize=50` | `queryProcessDefinitionVersions` | 分页查看历史版本**元数据**，需翻页核对总数；不保证包含每版完整 Task/DAG。 |
 | `GET /projects/{projectCode}/process-definition/{code}/versions/{version}` | `switchProcessDefinitionVersion` | **写操作！切换当前版本，并可能将定义变为 OFFLINE；严禁用于读取历史。** 仅在明确授权的版本恢复/切换操作中使用，随后回读状态、父引用和调度。 |
 | `DELETE /projects/{projectCode}/process-definition/{code}/versions/{version}` | `deleteProcessDefinitionVersion` | 删除指定历史版本；不是只读。 |
-| `GET /projects/{projectCode}/task-definition/{code}` | `queryTaskDefinitionDetail` | 查询当前 Task 详情；若返回 `50043`，停止常规整流更新并排查。 |
+| `GET /projects/{projectCode}/task-definition/{code}` | `queryTaskDefinitionDetail` | 查询单个 Task 详情；部分部署可能返回 `50043`，此时改用工作流 Task 列表接口交叉核对，不要把该只读接口错误误判为工作流写入失败。 |
 | `GET /projects/{projectCode}/task-definition/{code}/versions?pageNo=1&pageSize=50` | `queryTaskDefinitionVersions` | 查询历史 Task 版本元数据；分页处理。 |
 | `GET /projects/{projectCode}/task-definition/{code}/versions/{version}` | `switchTaskDefinitionVersion` | **写操作！** 切换当前 Task 版本，不用于历史查询。 |
 | `GET /projects/{projectCode}/task-definition/gen-task-codes` | `genTaskCodeList` | 生成 Task Code，虽是 GET 也不是无副作用的查询；仅在明确创建/重建授权后调用。 |
