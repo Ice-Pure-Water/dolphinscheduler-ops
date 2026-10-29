@@ -13,11 +13,17 @@ description: "通过 DolphinScheduler REST API 查询和操作资源、工作流
 
 优先使用 REST API 或 Web UI。先检查目标部署 `/v3/api-docs` 的版本和 OpenAPI；本 skill 的 3.2.0 接口核对记录见 [3.2.0 接口安全速查](references/api-3.2.0-safety.md)，[2.0.5 路由](references/api-2.0.5.md)仅作历史对照。不要根据大版本机械替换路由或认证。`ssh dev` 仅用于本机辅助操作；DS 对象操作通过 DS API 客户端或脚本执行，不默认经由 SSH 转发。SQL 和全局参数任务必须读取 [当前部署 SQL 全局变量与回归证据](references/sql-global-parameters.md)。
 
+## 按场景读取
+
+涉及版本升级、仅布置 OFFLINE、旧新链路切换、父子实例排障、日志分页、通知送达或 StarRocks 超时与重试时，读取 [近期运维场景与版本边界](references/recent-operations.md)。该文档区分历史部署证据、上游发布信息和 CLI 已实现能力。
+
 ## 操作顺序
 
 先确认 DS 地址、用户、项目编码、目标对象的 code/id，以及操作属于读操作还是写操作。优先按名称查询并记录唯一 code/id，再执行后续动作；不要用名称模糊匹配直接删除或修改。
 
 读操作包括项目、资源、工作流、工作流实例、任务实例和日志查询。读操作完成标准是返回结果与目标项目/对象身份一致，并保留 code/id、状态和版本信息。
+
+本技能提供 `scripts/ds_ops.mjs` 处理 DS 3.2.0 工作流上线和定时：运行前须检查脚本所用 operationId 与目标 `/v3/api-docs` 一致；凭据只从 `DS_URL`、`DS_USER`、`DS_PASSWORD` 环境变量读取。先用 `inspect` 查定义、活动实例和关联调度；只有活动实例为零且工作流/项目身份匹配时才继续。发布用 `release`，创建调度必须先创建 OFFLINE，再用 `online-schedule` 上线。创建后回读调度列表确认 Cron、时区、状态、告警组和失败策略。命令详见 [ds-ops-cli.md](references/ds-ops-cli.md)。
 
 3.2.0 登录参数按 `/v3/api-docs` 中 `/login` 声明的查询参数位置发送；遵循目标 API 契约，不依赖请求体兼容行为。只读预检脚本按此契约实现。
 
@@ -96,7 +102,7 @@ ${pg_value}
 ${sr_results_json}
 ```
 
-JSON 类型 OUT 变量嵌入 Python 脚本时，必须使用原始三引号字符串，避免 JSON 内部双引号破坏 Python 语法：
+对于受控且确认不含三引号终止符的 JSON，原始三引号可避免双引号和反斜杠破坏 Python 语法。它不是任意输入的安全序列化；包含任意文本时优先经文件或可靠编码传递，再解析。受控值示例：
 
 ```python
 inputs = {

@@ -59,3 +59,7 @@ python3 scripts/check_workflow.py \
 ## 安全边界
 
 脚本凭据只能由环境变量提供。日志可能包含密码、Webhook、SQL 参数或连接信息，输出时只保留必要的脱敏证据。GET 请求也可能改变状态；不能根据 HTTP 方法判断接口只读。遇到未知 `operationId`、接口版本不匹配、目标对象身份不符或响应异常时，停止后续写操作并重新查询状态。
+
+## DS 3.2.0 运维 CLI
+
+使用 Node.js 22 或更新版本运行 `scripts/ds_ops.mjs`（需要原生 fetch 与 Headers.getSetCookie）。命令、环境变量和限制见 [CLI 使用说明](../references/ds-ops-cli.md)。写命令运行前仍须完成 SKILL.md 的授权、基线与状态检查。近期布置、切换和排障流程见 [场景参考](../references/recent-operations.md)。
