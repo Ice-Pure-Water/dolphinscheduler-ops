@@ -25,6 +25,10 @@ cp -R ~/Downloads/projects/dolphinscheduler-ops ~/.codex/skills/dolphinscheduler
 
 提交时请提供 skill 提交版本、DolphinScheduler 版本、复现步骤和脱敏证据。不要附带密码、令牌、Webhook、内网地址、未脱敏 SQL 参数或原始日志。
 
+## 新增运维能力
+
+[近期场景与版本边界](references/recent-operations.md)覆盖 OFFLINE 布置、链路切换、实例日志与数据验收；[DS CLI](references/ds-ops-cli.md)提供查询与部分运维命令，并列出尚未自动实现的写入门禁。
+
 ## 文件导航
 
 - [`SKILL.md`](SKILL.md)：适用范围、运维流程和安全边界。
