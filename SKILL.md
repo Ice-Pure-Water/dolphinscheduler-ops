@@ -56,6 +56,8 @@ python3 "$SKILL_DIR/scripts/check_workflow.py" \
 
 修改工作流前读取当前定义并保存版本号。修改完成后查询 definition 详情和版本，确认任务数量、任务类型、依赖关系、资源 id 和关键参数没有意外变化。历史版本会保留，不能把“修改成功”误认为“旧版本已删除”。
 
+使用 `scripts/ds_ops.mjs update-definition` 修改完整 DAG、SQL、SHELL 或子流程参数时，先用 `--dry-run true` 预览白名单补丁。只修改工作流说明可用 `update-workflow-info`，该命令通过 V2 API 写入并回读节点和依赖。单个 SQL/SHELL 任务可使用 `update-task`：要求工作流 OFFLINE、无活动实例，并扫描项目定义确认该任务仅被目标工作流引用；先成功读取任务详情，再调用单任务更新接口；详情查询失败时报告存在性未知，不自动创建替代任务。SQL 文本通过 `--sql-updates-file` 更新；`--task-params-updates-file` 按任务类型只允许 SQL 的 `description`/`localParams`、SHELL 的 `rawScript`/`description`/`localParams`、SUB_PROCESS 的 `localParams`/`processDefinitionVersion`。`--global-param` 可选。Task `taskParams` 按 DS `TaskDefinition` 的字符串 JSON 格式提交；完整 DAG 更新时保留当前 Task 版本号，由 DS 根据参数变更生成下一版，不要在客户端预先递增。写后回读任务参数、版本、关系版本和数量。更新失败自动读回一次后停止；核对工作流、任务及版本接口能观测到的变化，区分事实与假设，再修复和预览，不直接重放原请求。完整参数格式见 [ds-ops-cli.md](references/ds-ops-cli.md)。
+
 ### DAG 画布布局
 
 修改画布前先从 `processTaskRelationList` 还原实际拓扑，再安排 `locations`：
@@ -113,8 +115,18 @@ inputs = {
 
 配置下游任务时，应避免重复声明上游 OUT 变量；排查时优先检查上游 OUT 定义、下游 VarPool 和最终生成的脚本内容。
 
+## 当前部署字符限制
+
+保存到当前 DS 部署的工作流名称、描述、任务名称、SQL、Shell/Python 脚本、全局参数和通知模板，均不得包含四字节 Unicode 字符（码点大于 U+FFFF），包括美国旗帜 emoji（U+1F1FA U+1F1F8）。使用普通中文、ASCII 或 BMP 字符替代。
+
+提交前检查完整待保存内容，而不仅是消息标题。可用 Python 检查 `any(ord(c) > 0xFFFF for c in content)`；结果为真时先替换，再保存。通知正文仍保留机器人要求的关键词“监控告警”。
+
+这是当前部署的操作约束；此前保存失败与四字节字符有关的判断尚缺服务端异常堆栈或列字符集证据，不将 MySQL utf8mb3 写成已确认根因，也不推广为所有 DS 部署的限制。
+
 ## 凭据和失败处理
 
 凭据通过目标环境已有环境变量或安全配置提供，不写入脚本、日志、skill、命令历史或最终回复。API 返回非零业务 code、HTTP 4xx/5xx、对象身份不一致或版本变化异常时停止后续写操作，保存响应摘要并重新查询状态。
 
 不要直接修改数据库作为常规 API 替代。只有 API 无法处理已确认的 `READY_STOP` 实例时，才按专门清理规程执行最小范围、带状态条件和可回滚的数据库操作。
+
+保存或任务详情 API 返回通用错误时，读取 [保存失败诊断](references/update-failure-diagnosis.md)。先取得响应和服务端异常证据，再决定修复范围；页面与 API 同错不等于已定位数据库根因。

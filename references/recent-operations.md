@@ -31,9 +31,13 @@ SQL/API 超时后先核对实例与目标批次计数、业务键和样本，再
 
 ## 自动化能力范围
 
-现有 ds_ops.mjs 包含 inspect、inspect-instance、show-sql、release、create-schedule、online-schedule、offline-schedule、update-definition。最后一个命令仅处理全局参数和 SQL，不支持通用 Task 参数 patch。
+现有 ds_ops.mjs 包含 inspect、inspect-instance、show-sql、release、create-schedule、online-schedule、offline-schedule、update-definition、update-task、update-workflow-info。定义更新先用 `--dry-run true` 检查白名单 patch，再提交。SQL 支持 SQL 文本与 `description`/`localParams` patch；SHELL 支持 `rawScript`/`description`/`localParams`；SUB_PROCESS 支持 `localParams`/`processDefinitionVersion`。`update-task` 仅在任务唯一属于指定 OFFLINE 工作流且没有活动实例时调用 DS 单任务更新 API，由 DS 自行生成任务/工作流版本并同步依赖。`update-workflow-info` 仅通过 V2 API 更新说明并校验拓扑。写入后回读参数、版本与关系；失败时单次回读并停止，禁止盲目重试。
 
-该 CLI 是已有的场景脚本，尚未达到通用安全写入客户端的标准：写命令缺少统一基线备份、版本并发比较、dry-run diff 与完整写后结构校验；创建调度仍限定 16:00 Asia/Shanghai，调度发布未自动校验所属流程。使用写命令前由操作者完成主文档规定的基线、身份、活动实例和调度门禁；未覆盖的 Task 参数修改须先实现白名单 patch。不要把 inspect 输出或本文件说明当作写命令已自动实现这些门禁。
+2026-10-29 美国三源处理保存失败：API 完整定义更新（全表单及混合 query/form）、V2 说明更新返回 10107；同一工作流在官方 Web UI 编辑两个监控节点并保存，也返回 HTTP 200、业务码 10107。页面使用 PUT process-definition/{code}，全部字段为 URL-encoded form body。目标任务详情/版本接口分别返回 50043/50039，不能据此判断当前表缺行。回读工作流仍为 v23，目标任务仍为 v6/v8，仅证明这些可见版本未变化，未完成元数据全量核对。已恢复原定义及原定时上线，未运行工作流。直接 DS 主机 SSH 认证未通过；辅助主机的旧 API 日志停在 2024 年，不用于解释本次异常。根因尚待当前 API 服务端异常堆栈确认。详见 [保存失败诊断](update-failure-diagnosis.md)。
+
+2026-10-30 后续：移除通知模板中的四字节字符后，重建工作流的完整定义更新已成功；修正 SQL OUT 参数名和默认增量参数后完成发布与每日 16:00 定时。随后通过 CLI 为 ADS 当日行数增加美国申请号前缀过滤，保存、版本/参数回读及结构检查通过。未手动启动实例。字符限制现写入 SKILL.md；缺少服务端异常堆栈，仍不将此前所有错误统一归因于数据库字符集。
+
+该 CLI 仍是受限场景脚本，不是通用 DS 客户端；写命令不会自动备份生产配置，也不替代操作者核验身份、活动实例、基线与定时归属。创建调度仍限定 16:00 Asia/Shanghai。更新失败后自动回读一次，核对版本未变后方可定位原因；先修复请求或接口问题，再单独预览和重试。
 
 show-sql 导出的 SQL 可能敏感，只在授权诊断需要时保存到受控文件。inspect-instance 仅输出错误类别摘要，原始日志另按脱敏流程按需读取。
 
