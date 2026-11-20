@@ -24,7 +24,7 @@ SAFE_GET = {
 
 
 class ReadOnlyClient:
-    def __init__(self, url: str, user: str, password: str) -> None:
+    def __init__(self, url: str, user: str | None, password: str | None, token: str | None = None) -> None:
         parsed = urllib.parse.urlsplit(url)
         if (
             parsed.scheme not in ("http", "https")
@@ -39,6 +39,7 @@ class ReadOnlyClient:
         self.opener = urllib.request.build_opener(
             urllib.request.HTTPCookieProcessor(http.cookiejar.CookieJar())
         )
+        self.token = token
         self.spec = self._request("GET", "/v3/api-docs")
         if self.spec.get("info", {}).get("version") != "3.2.0":
             raise ValueError("目标 OpenAPI 不是已核验的 DS 3.2.0，停止检查")
@@ -53,13 +54,12 @@ class ReadOnlyClient:
             )
             if actual != operation:
                 raise ValueError(f"只读接口语义发生变化：{path}")
-        login = self.spec.get("paths", {}).get("/login", {}).get("post", {})
-        if login.get("operationId") != "login":
-            raise ValueError("登录接口语义发生变化")
-        response = self._request(
-            "POST", "/login", {"userName": user, "userPassword": password}
-        )
-        self._check(response, "登录")
+        if not token:
+            login = self.spec.get("paths", {}).get("/login", {}).get("post", {})
+            if login.get("operationId") != "login":
+                raise ValueError("登录接口语义发生变化")
+            response = self._request("POST", "/login", {"userName": user, "userPassword": password})
+            self._check(response, "登录")
 
     def _request(
         self, method: str, path: str, form: dict[str, str] | None = None
@@ -78,9 +78,7 @@ class ReadOnlyClient:
             self.base + path,
             data=body,
             method=method,
-            headers={"Content-Type": "application/x-www-form-urlencoded"}
-            if body
-            else {},
+            headers={**({"Content-Type": "application/x-www-form-urlencoded"} if body else {}), **({"token": self.token} if self.token else {})},
         )
         try:
             with self.opener.open(request, timeout=20) as response:
@@ -301,11 +299,12 @@ def main() -> int:
     args = parser.parse_args()
     user = os.environ.get("DS_USER")
     password = os.environ.get("DS_PASSWORD")
-    if not user or not password:
-        parser.error("需通过环境变量 DS_USER 和 DS_PASSWORD 提供凭据")
+    token = os.environ.get("DS_TOKEN")
+    if not token and (not user or not password):
+        parser.error("需通过 DS_TOKEN 或 DS_USER 和 DS_PASSWORD 环境变量提供凭据")
     try:
         issues = run(
-            ReadOnlyClient(args.url, user, password),
+            ReadOnlyClient(args.url, user, password, token),
             args.project_code,
             args.workflow_code,
         )

@@ -25,7 +25,7 @@ cp -R ~/Downloads/projects/dolphinscheduler-ops ~/.codex/skills/dolphinscheduler
 
 - Python 版本为 3.10 或更高。
 - `DS_URL` 是无用户名、密码、查询参数或片段的服务根地址。
-- `DS_USER` 和 `DS_PASSWORD` 已由运行环境安全提供，不能写入命令行、文档或日志。
+- 优先使用安全配置的 `DS_TOKEN`；脚本以 `token` 请求头认证并跳过 `/login`。没有 Token 时才使用 `DS_USER` 与 `DS_PASSWORD`。不要把任何凭据写入命令行、文档或日志。
 - `PROJECT_CODE` 和 `WORKFLOW_CODE` 是从目标环境确认的数字编码。
 - 目标 `/v3/api-docs` 返回版本 3.2.0，且相关 `operationId` 与参考文档一致。
 
@@ -59,3 +59,7 @@ python3 scripts/check_workflow.py \
 ## 安全边界
 
 脚本凭据只能由环境变量提供。日志可能包含密码、Webhook、SQL 参数或连接信息，输出时只保留必要的脱敏证据。GET 请求也可能改变状态；不能根据 HTTP 方法判断接口只读。遇到未知 `operationId`、接口版本不匹配、目标对象身份不符或响应异常时，停止后续写操作并重新查询状态。
+
+## DS 3.2.0 运维 CLI
+
+使用 Node.js 22 或更新版本运行 `scripts/ds_ops.mjs`（需要原生 fetch 与 Headers.getSetCookie）。命令、环境变量和限制见 [CLI 使用说明](../references/ds-ops-cli.md)。写命令运行前仍须完成 SKILL.md 的授权、基线与状态检查。近期布置、切换和排障流程见 [场景参考](../references/recent-operations.md)。

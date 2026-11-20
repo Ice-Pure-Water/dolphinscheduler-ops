@@ -35,3 +35,9 @@
 5. 修改子流程后查所有引用它的父流程，处理明确固定的 `SUB_PROCESS.taskParams.processDefinitionVersion`，再逐一核对 ONLINE 和 OFFLINE 调度原状态；不要在调度触发前后做未验证的批量修改。
 6. 切版本属于生产写操作；误切时先停止其他变更，从事前基线确认目标版本和关联引用，再经授权恢复原版本和状态，最后向用户报告影响窗口。版本历史清单不能替代业务运行验证。
 7. `scripts/check_workflow.py` 是只读**辅助检查**，仅覆盖一个工作流、它的 Task 详情、直接子流程和调度；不搜索所有父流程、不查询活动实例、不验证 SQL 结果/业务日期，也不检测 DAG 连线交叉，不能替代画布检查或构成 DS API 权限隔离层。生产修改仍需人工核对授权、父子引用、调度和实例。
+
+## 2026-10-29 当前服务只读复核
+
+`/v3/api-docs` 返回 `info.version=3.2.0`，共 273 条路径。重新核对 login、queryProcessDefinitionByCode、updateProcessDefinition、queryProcessInstanceList、queryScheduleListPaging、createSchedule_1、queryLog_1，与上表一致。未执行生产写入或工作流运行。
+
+登录 userName/userPassword 均为必填 query 参数；日志 taskInstanceId/skipLineNum/limit 均为必填 query 参数。调度列表的 processDefinitionId 标记 required=true，却未声明 in，属于当前契约缺陷；沿用已验证客户端处理并检查响应身份，不能据此假设任意 OpenAPI 客户端均可用。升级后重新核验。
