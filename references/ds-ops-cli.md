@@ -1,6 +1,6 @@
 # DS 3.2.0 工作流发布与定时 CLI
 
-凭据必须由环境安全注入：`DS_URL`、`DS_USER`、`DS_PASSWORD`。脚本会重新读取 `/v3/api-docs`，只在版本为 3.2.0 且 operationId 匹配时工作。不得把凭据写进命令行、文件或日志。
+凭据必须由环境安全注入：优先 `DS_URL` + `DS_TOKEN`（请求头 `token`，跳过 `/login`）；兼容方式为 `DS_URL` + `DS_USER` + `DS_PASSWORD`。使用密码登录可能使 DS 服务端已有的同账号网页会话失效；避免用个人网页账号运行 CLI。脚本会重新读取 `/v3/api-docs`，只在版本为 3.2.0 且 operationId 匹配时工作。不得把凭据写进命令行、文件或日志。Token 需由有权限的管理员/用户预先在 DS Token 管理中安全创建，不由脚本自动生成或撤销。
 
 ```bash
 node scripts/ds_ops.mjs inspect --project PROJECT_CODE --code WORKFLOW_CODE

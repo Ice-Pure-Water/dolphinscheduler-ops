@@ -25,7 +25,7 @@ cp -R ~/Downloads/projects/dolphinscheduler-ops ~/.codex/skills/dolphinscheduler
 
 - Python 版本为 3.10 或更高。
 - `DS_URL` 是无用户名、密码、查询参数或片段的服务根地址。
-- `DS_USER` 和 `DS_PASSWORD` 已由运行环境安全提供，不能写入命令行、文档或日志。
+- 优先使用安全配置的 `DS_TOKEN`；脚本以 `token` 请求头认证并跳过 `/login`。没有 Token 时才使用 `DS_USER` 与 `DS_PASSWORD`。不要把任何凭据写入命令行、文档或日志。
 - `PROJECT_CODE` 和 `WORKFLOW_CODE` 是从目标环境确认的数字编码。
 - 目标 `/v3/api-docs` 返回版本 3.2.0，且相关 `operationId` 与参考文档一致。
 

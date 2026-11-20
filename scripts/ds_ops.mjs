@@ -10,7 +10,8 @@ for (let i=1;i<args.length;i++) if(args[i].startsWith('--')) opts[args[i].slice(
 const base = process.env.DS_URL;
 const user = process.env.DS_USER;
 const password = process.env.DS_PASSWORD;
-if (!base || !user || !password) throw new Error('Set DS_URL, DS_USER and DS_PASSWORD in the environment');
+const token = process.env.DS_TOKEN;
+if (!base || (!token && (!user || !password))) throw new Error('Set DS_URL and either DS_TOKEN or DS_USER/DS_PASSWORD in the environment');
 const url = new URL(base);
 if (!['http:','https:'].includes(url.protocol) || url.username || url.password || url.search || url.hash) throw new Error('DS_URL must be a credential-free service root');
 const cookie = new Map();
@@ -24,7 +25,7 @@ async function request(method,path,params={},useFormBody=false,jsonBody=false,qu
   const form=new URLSearchParams(); for (const [k,v] of Object.entries(params)) if(v!==undefined&&v!==null) form.set(k,String(v));
   if(!useFormBody&&!jsonBody) for (const [k,v] of form) u.searchParams.set(k,v);
   else for (const [k,v] of Object.entries(queryParams)) if(v!==undefined&&v!==null) u.searchParams.set(k,String(v));
-  const headers={}; if(cookie.size) headers.Cookie=[...cookie].map(([k,v])=>`${k}=${v}`).join('; ');
+  const headers={}; if(token) headers.token=token; if(cookie.size) headers.Cookie=[...cookie].map(([k,v])=>`${k}=${v}`).join('; ');
   if(useFormBody){headers['Content-Type']='application/x-www-form-urlencoded';}
   if(jsonBody) headers['Content-Type']='application/json';
   const res=await fetch(u,{method,headers,body:jsonBody?JSON.stringify(params):useFormBody?form.toString():undefined});
@@ -58,10 +59,12 @@ async function requestPages(path, params) {
 }
 spec=await (await fetch(base.replace(/\/$/,'')+'/v3/api-docs')).json();
 if(spec.info?.version!=='3.2.0') throw new Error(`Expected DS 3.2.0, got ${spec.info?.version}`);
-assertOp('/login','post','login');
-const login=spec.paths['/login'].post.parameters??[];
-if(!login.some(p=>p.name==='userName') || !login.some(p=>p.name==='userPassword')) throw new Error('Unexpected login contract');
-await request('POST','/login',{userName:user,userPassword:password});
+if(!token) {
+  assertOp('/login','post','login');
+  const login=spec.paths['/login'].post.parameters??[];
+  if(!login.some(p=>p.name==='userName') || !login.some(p=>p.name==='userPassword')) throw new Error('Unexpected login contract');
+  await request('POST','/login',{userName:user,userPassword:password});
+}
 const project=opts.project, code=opts.code;
 if(!project||!code) throw new Error('--project and --code are required');
 const defPath='/projects/{projectCode}/process-definition/{code}';
