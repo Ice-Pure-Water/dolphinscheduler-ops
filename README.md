@@ -1,6 +1,6 @@
 # DolphinScheduler 运维 skill
 
-本仓库发布 `dolphinscheduler-ops` skill，用于通过 DolphinScheduler REST API 或 Web UI 查询和运维资源、工作流定义、工作流实例及任务实例。内容包括服务端版本与 OpenAPI 核验、写操作前置检查、假成功诊断、SQL Task 全局变量与日期排障，以及只读工作流结构预检脚本。
+本仓库发布 `dolphinscheduler-ops` skill，用于通过可用的 DolphinScheduler MCP/API 连接或 Web UI 完成登录核验、查询诊断、变更预览、受控写入和写后验收。能力规程覆盖资源、工作流定义/版本/任务/依赖、调度、实例、任务状态与日志；本地 CLI 仍是面向 DS 3.2.0 的受限实现，不等于全版本全 API 客户端。所有连接和写能力以当前会话实际工具及目标服务 `/v3/api-docs` 为准。
 
 skill 的执行规则以 [`SKILL.md`](SKILL.md) 为准；安装步骤见[使用指南](docs/usage.md)，发布步骤见[维护说明](docs/maintenance.md)。
 
@@ -28,6 +28,10 @@ cp -R ~/Downloads/projects/dolphinscheduler-ops ~/.codex/skills/dolphinscheduler
 ## 新增运维能力
 
 [近期场景与版本边界](references/recent-operations.md)覆盖 OFFLINE 布置、链路切换、实例日志与数据验收；[DS CLI](references/ds-ops-cli.md)提供查询与部分运维命令，并列出尚未自动实现的写入门禁。
+
+主 skill 新增统一的连接能力模型、登录凭据边界、写操作门禁和 MCP 接入审查清单。社区候选参考 [iflytek/dolphin-mcp-pilot](https://github.com/iflytek/dolphin-mcp-pilot)；它不是本地已连接服务，也不是 Apache 内置 AI 功能。
+
+[MCP 能力映射与 Skill 操作手册](references/mcp-capability-map.md)将上游 MCP 能力转换为项目/工作流/DAG/调度/实例/资源/监控的操作规程，逐项标示本地 CLI 覆盖程度及风险门禁。
 
 ## 文件导航
 
